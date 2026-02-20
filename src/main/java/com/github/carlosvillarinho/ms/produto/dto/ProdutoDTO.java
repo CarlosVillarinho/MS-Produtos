@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+//LOMBOK
 @AllArgsConstructor //CRIA CONSTRUTOR COM TODOS OS ARGUMENTOS
 @NoArgsConstructor //CRIA CONSTRUTOR SEM NENHUM ARGUMENTO
 @Getter
