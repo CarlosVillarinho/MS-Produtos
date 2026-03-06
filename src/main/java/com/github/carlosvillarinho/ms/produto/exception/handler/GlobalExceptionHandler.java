@@ -2,6 +2,7 @@ package com.github.carlosvillarinho.ms.produto.exception.handler;
 
 import com.github.carlosvillarinho.ms.produto.exception.DTO.CustomErrorDTO;
 import com.github.carlosvillarinho.ms.produto.exception.DTO.ValidationErrorDTO;
+import com.github.carlosvillarinho.ms.produto.exception.DatabaseException;
 import com.github.carlosvillarinho.ms.produto.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -58,6 +59,28 @@ public class GlobalExceptionHandler {
         HttpStatus status = HttpStatus.BAD_REQUEST; //400
         CustomErrorDTO err = new CustomErrorDTO(Instant.now(), status.value(),
                 "Requisição inváçida (parâmetro com tipo/formato incorreto).",
+                request.getRequestURI());
+
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(DatabaseException.class)
+    public ResponseEntity<CustomErrorDTO> handleDataBase(DatabaseException e,
+                                                             HttpServletRequest request){
+        HttpStatus status = HttpStatus.CONFLICT; //409
+        CustomErrorDTO err = new CustomErrorDTO(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
+
+        return ResponseEntity.status(status).body(err);
+    }
+
+    //500 - fallnack para qualuqer erro nao tratado
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<CustomErrorDTO> handleGenericException(Exception e,
+                                                             HttpServletRequest request){
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; //500
+        CustomErrorDTO err = new CustomErrorDTO(Instant.now(), status.value(),
+                "Erro intero inesperado.",
                 request.getRequestURI());
 
         return ResponseEntity.status(status).body(err);

@@ -1,11 +1,15 @@
 package com.github.carlosvillarinho.ms.produto.service;
 
 import com.github.carlosvillarinho.ms.produto.dto.ProdutoDTO;
+import com.github.carlosvillarinho.ms.produto.entities.Categoria;
 import com.github.carlosvillarinho.ms.produto.entities.Produto;
+import com.github.carlosvillarinho.ms.produto.exception.DatabaseException;
 import com.github.carlosvillarinho.ms.produto.exception.ResourceNotFoundException;
+import com.github.carlosvillarinho.ms.produto.repositores.CategoriaRepository;
 import com.github.carlosvillarinho.ms.produto.repositores.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +20,9 @@ public class ProdutoService {
 
     @Autowired
     private ProdutoRepository produtoRepository;
+
+    @Autowired
+    private CategoriaRepository categoriaRepository;
 
     //METODOS
     @Transactional(readOnly = true)
@@ -36,16 +43,25 @@ public class ProdutoService {
 
     @Transactional
     public ProdutoDTO saveProduto(ProdutoDTO produtoDTO){
-        Produto produto = new Produto();
-        copyDtoToProduto(produtoDTO, produto);
-        produto = produtoRepository.save(produto);
-        return new ProdutoDTO(produto);
+        try{
+            Produto produto = new Produto();
+            copyDtoToProduto(produtoDTO, produto);
+            produto = produtoRepository.save(produto);
+            return new ProdutoDTO(produto);
+        } catch (DataIntegrityViolationException e) {
+            throw new DatabaseException("Não foi possivel salvar Produto. Categoria inexistente " +
+                    " (ID: " + produtoDTO.getCategoria().getId() + ")");
+        }
+
     }
 
     private void copyDtoToProduto(ProdutoDTO produtoDTO, Produto produto){
         produto.setNome(produtoDTO.getNome());
         produto.setDescricao(produtoDTO.getDescricao());
         produto.setValor(produtoDTO.getValor());
+        //OBJETO COMPLETO GERENCIADO
+        Categoria categoria = categoriaRepository.getReferenceById(produtoDTO.getCategoria().getId());
+        produto.setCategoria(categoria);
     }
 
     @Transactional
